@@ -6,15 +6,33 @@ const users = [
 
 export default {
   'GET /api/v1/users': (req: any, res: any) => {
+   
+    let filteredUsers = users;
+
+    for (const key in req.query) {
+      if (req.query.hasOwnProperty(key)) {
+        const value = req.query[key];
+
+        filteredUsers = filteredUsers.filter((item) => {
+          const itemValue = item[key];
+
+          if (typeof value === 'object') {
+            return value?.some((v: string) => itemValue?.includes(v.trim()));
+          }
+
+          return item[key] == value;
+        });
+      }
+    }
     res.json({
       success: true,
-      data: { list: users },
+      data: { list: filteredUsers },
       errorCode: 0,
     });
   },
   'POST /api/v1/users': (req: any, res: any) => {
     users.push({
-      id: users.length,
+      id: Math.floor(Math.random() * 10000),
       ...req.body,
     });
     res.json({
@@ -24,22 +42,32 @@ export default {
     });
   },
   'PUT /api/v1/users': (req: any, res: any) => {
-    users[0] = {
-      ...users[0],
-      ...req.body,
-    };
+    let success = false;
+
+    let index = users.findIndex((item) => item.id === req.body.id);
+
+    if (index !== -1) {
+      users[index] = req.body;
+      success = true;
+    }
 
     res.json({
-      success: true,
+      success,
       data: { list: users },
       errorCode: 0,
     });
   },
   'DELETE /api/v1/users': (req: any, res: any) => {
-    users.pop();
+    let success = false;
+
+    const index = users.findIndex((item) => item.id === req.body.userId);
+    if (index !== -1) {
+      success = true;
+      users.splice(index, 1);
+    }
 
     res.json({
-      success: true,
+      success,
       data: { list: users },
       errorCode: 0,
     });
